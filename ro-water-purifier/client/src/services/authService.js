@@ -1,16 +1,7 @@
 import axios from 'axios';
-
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-const api = axios.create({
-  baseURL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import api from './apiService.js';
 
 let accessToken = null;
-let refreshTokenValue = null;
 let isRefreshing = false;
 let refreshSubscribers = [];
 
@@ -19,11 +10,8 @@ const sanitizeString = (value) => {
   return value.trim().replace(/<[^>]*?>/g, '');
 };
 
-const sanitizePayload = (payload) => {
-  return Object.fromEntries(
-    Object.entries(payload).map(([key, value]) => [key, sanitizeString(value)])
-  );
-};
+const sanitizePayload = (payload) =>
+  Object.fromEntries(Object.entries(payload).map(([key, value]) => [key, sanitizeString(value)]));
 
 const notifySubscribers = (token) => {
   refreshSubscribers.forEach(({ resolve }) => resolve(token));
@@ -35,17 +23,17 @@ const subscribeRefresh = () =>
     refreshSubscribers.push({ resolve, reject });
   });
 
-export const initializeAuth = (token, refreshToken) => {
+export const initializeAuth = (token) => {
   accessToken = token;
-  refreshTokenValue = refreshToken;
   if (token) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common.Authorization;
   }
 };
 
 export const clearAuthTokens = () => {
   accessToken = null;
-  refreshTokenValue = null;
   delete api.defaults.headers.common.Authorization;
 };
 
@@ -70,26 +58,21 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && refreshTokenValue) {
+    if (error.response?.status === 401) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
         const token = await subscribeRefresh();
+        if (!token) return Promise.reject(error);
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return api(originalRequest);
       }
 
       isRefreshing = true;
-
       try {
-        const refreshResponse = await axios.post(
-          `${baseURL}/api/auth/refresh`,
-          { refreshToken: refreshTokenValue },
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data;
-        initializeAuth(newAccessToken, newRefreshToken || refreshTokenValue);
+        const refreshResponse = await api.post('/auth/refresh');
+        const { accessToken: newAccessToken } = refreshResponse.data;
+        initializeAuth(newAccessToken);
         notifySubscribers(newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
@@ -109,32 +92,60 @@ api.interceptors.response.use(
 const authService = {
   login: async (payload) => {
     const safePayload = sanitizePayload(payload);
-    const response = await api.post('/api/auth/login', safePayload);
+    const response = await api.post('/auth/login', safePayload);
     return response.data;
   },
 
   register: async (payload) => {
     const safePayload = sanitizePayload(payload);
-    const response = await api.post('/api/auth/register', safePayload);
+    const response = await api.post('/auth/register', safePayload);
     return response.data;
   },
 
   logout: async () => {
     try {
-      await api.post('/api/auth/logout', { refreshToken: refreshTokenValue });
+      await api.post('/auth/logout');
     } catch (error) {
-      // continue to clear local state even if the backend logout fails
+      // ignore logout network errors
     }
   },
 
   forgotPassword: async (payload) => {
     const safePayload = sanitizePayload(payload);
-    const response = await api.post('/api/auth/forgot-password', safePayload);
+    const response = await api.post('/auth/forgot-password', safePayload);
+    return response.data;
+  },
+
+  resetPassword: async (payload) => {
+    const safePayload = sanitizePayload(payload);
+    const response = await api.post('/auth/reset-password', safePayload);
+    return response.data;
+  },
+
+  sendOtp: async (payload) => {
+    const safePayload = sanitizePayload(payload);
+    const response = await api.post('/auth/send-otp', safePayload);
+    return response.data;
+  },
+
+  verifyOtp: async (payload) => {
+    const safePayload = sanitizePayload(payload);
+    const response = await api.post('/auth/verify-otp', safePayload);
+    return response.data;
+  },
+
+  googleLogin: async (payload) => {
+    const response = await api.post('/auth/google', payload);
     return response.data;
   },
 
   fetchMe: async () => {
-    const response = await api.get('/api/auth/me');
+    const response = await api.get('/auth/me');
+    return response.data;
+  },
+
+  refreshToken: async () => {
+    const response = await api.post('/auth/refresh');
     return response.data;
   },
 };

@@ -1,8 +1,13 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
+const cookieParser = require('cookie-parser');
 const fs = require('fs').promises;
-const { body, validationResult } = require('express-validator');
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const errorHandler = require('./middleware/errorHandler');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
@@ -10,8 +15,16 @@ const PORT = process.env.PORT || 5000;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 const CONTACTS_FILE = path.join(__dirname, 'contacts.json');
 
-app.use(cors({ origin: CLIENT_ORIGIN }));
+connectDB(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ro_purifier_auth');
+
+app.use(
+  cors({
+    origin: CLIENT_ORIGIN,
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const services = [
   {
@@ -19,29 +32,29 @@ const services = [
     title: 'RO Water Purifier Sales',
     description: 'Premium RO systems designed for home, office and commercial spaces.',
     icon: '💧',
-    price: '₹10,999'
+    price: '₹10,999',
   },
   {
     id: 2,
     title: 'RO Installation Service',
     description: 'Fast and safe installation from certified RO technicians.',
     icon: '🛠️',
-    price: '₹2,499'
+    price: '₹2,499',
   },
   {
     id: 3,
     title: 'RO Repair & Maintenance',
     description: 'Quick diagnostics and repair for all RO purifier models.',
     icon: '🔧',
-    price: '₹1,999'
+    price: '₹1,999',
   },
   {
     id: 4,
     title: 'Filter & Membrane Replacement',
     description: 'Genuine spare parts and filter replacement plans.',
     icon: '🔁',
-    price: '₹2,999'
-  }
+    price: '₹2,999',
+  },
 ];
 
 const products = [
@@ -51,7 +64,7 @@ const products = [
     description: 'Compact systems ideal for family kitchens.',
     category: 'Domestic',
     price: '₹12,999',
-    quantity: 1
+    quantity: 1,
   },
   {
     id: 2,
@@ -59,7 +72,7 @@ const products = [
     description: 'High-capacity solution for offices, schools and restaurants.',
     category: 'Commercial',
     price: '₹49,999',
-    quantity: 1
+    quantity: 1,
   },
   {
     id: 3,
@@ -67,8 +80,8 @@ const products = [
     description: 'Connected RO systems with monitor-friendly controls.',
     category: 'Smart',
     price: '₹24,999',
-    quantity: 1
-  }
+    quantity: 1,
+  },
 ];
 
 const testimonials = [
@@ -76,38 +89,38 @@ const testimonials = [
     id: 1,
     text: 'The installation team was professional and the water tastes amazing. Highly recommended!',
     rating: 5,
-    author: 'Rhea S.'
+    author: 'Rhea S.',
   },
   {
     id: 2,
     text: 'Fast service and great support. Our office RO works flawlessly.',
     rating: 5,
-    author: 'Vikram K.'
+    author: 'Vikram K.',
   },
   {
     id: 3,
     text: 'Affordable AMC plans and genuine filters. Very happy with the after-sales care.',
     rating: 5,
-    author: 'Anjali M.'
-  }
+    author: 'Anjali M.',
+  },
 ];
 
 const faqs = [
   {
     id: 1,
     question: 'Why is RO water purification important?',
-    answer: 'RO purification removes contaminants and ensures safe drinking water by filtering out dissolved solids, bacteria and impurities.'
+    answer: 'RO purification removes contaminants and ensures safe drinking water by filtering out dissolved solids, bacteria and impurities.',
   },
   {
     id: 2,
     question: 'How often should RO filters be replaced?',
-    answer: 'We recommend replacing RO filters every 6-12 months depending on usage and water quality to maintain peak performance.'
+    answer: 'We recommend replacing RO filters every 6-12 months depending on usage and water quality to maintain peak performance.',
   },
   {
     id: 3,
     question: 'Do you provide doorstep service?',
-    answer: 'Yes, we offer doorstep installation, repair, maintenance and AMC services across our service area.'
-  }
+    answer: 'Yes, we offer doorstep installation, repair, maintenance and AMC services across our service area.',
+  },
 ];
 
 async function loadContacts() {
@@ -126,38 +139,23 @@ async function saveContacts(contacts) {
   await fs.writeFile(CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf8');
 }
 
-app.get('/api/services', (req, res) => {
-  res.json(services);
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
 
-app.get('/api/products', (req, res) => {
-  res.json(products);
-});
-
-app.get('/api/testimonials', (req, res) => {
-  res.json(testimonials);
-});
-
-app.get('/api/faqs', (req, res) => {
-  res.json(faqs);
-});
+app.get('/api/services', (req, res) => res.json(services));
+app.get('/api/products', (req, res) => res.json(products));
+app.get('/api/testimonials', (req, res) => res.json(testimonials));
+app.get('/api/faqs', (req, res) => res.json(faqs));
 
 app.post(
   '/api/contact',
-  [
-    body('name').trim().notEmpty().withMessage('Name is required.'),
-    body('phone').trim().notEmpty().withMessage('Phone is required.'),
-    body('email').trim().isEmail().withMessage('Valid email is required.'),
-    body('serviceType').trim().notEmpty().withMessage('Service type is required.'),
-    body('message').trim().notEmpty().withMessage('Message is required.')
-  ],
   async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+    const { name, phone, email, serviceType, message } = req.body;
+    if (!name || !phone || !email || !serviceType || !message) {
+      return res.status(422).json({ success: false, message: 'Please fill out all contact fields.' });
     }
 
-    const { name, phone, email, serviceType, message } = req.body;
     try {
       const contacts = await loadContacts();
       contacts.push({ id: Date.now(), name, phone, email, serviceType, message, createdAt: new Date().toISOString() });
@@ -170,13 +168,10 @@ app.post(
 );
 
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found.' });
+  res.status(404).json({ success: false, message: 'Resource not found.' });
 });
 
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
