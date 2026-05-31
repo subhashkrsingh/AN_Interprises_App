@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-navy text-slate-100;
+  font-family: 'Source Sans 3', sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.section-card {
+  @apply rounded-3xl border border-slate-800/80 bg-white/5 p-6 shadow-soft backdrop-blur-xl;
+}
+
+.section-title {
+  @apply text-3xl font-semibold text-white sm:text-4xl;
+}
+
+.section-subtitle {
+  @apply mt-3 max-w-2xl text-slate-300;
+}
+
+.toast {
+  @apply fixed bottom-6 right-6 z-50 rounded-full bg-cyan px-5 py-3 text-navy shadow-soft;
+}
+
+@layer utilities {
+  .text-cyan {
+    color: #00d4ff;
+  }
+}
