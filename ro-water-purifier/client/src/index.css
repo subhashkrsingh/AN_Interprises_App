@@ -53,3 +53,29 @@ textarea {
     color: #00d4ff;
   }
 }
+
+@keyframes whatsapp-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.whatsapp-fab {
+  @apply rounded-full bg-emerald-500/95 px-4 py-4 text-white shadow-[0_20px_50px_rgba(16,185,129,0.24)] backdrop-blur-xl border border-emerald-400/20;
+  animation: whatsapp-pulse 2.8s ease-in-out infinite;
+}
+
+.whatsapp-button {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition duration-200 ease-in-out border border-transparent;
+}
+
+.whatsapp-button:hover {
+  @apply bg-emerald-400;
+}
+
+.whatsapp-button--disabled {
+  @apply cursor-not-allowed opacity-60;
+}

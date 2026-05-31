@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { getServices } from '../api/index.js';
 import Loader from '../components/Loader.jsx';
+import WhatsAppButton from '../components/WhatsAppButton.jsx';
 
 function Services() {
   const [services, setServices] = useState([]);
@@ -22,6 +23,8 @@ function Services() {
     load();
   }, []);
 
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+
   return (
     <main className="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8">
       <Helmet>
@@ -39,19 +42,36 @@ function Services() {
         <Loader />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-          {services.map((service) => (
-            <motion.div
-              key={service.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="section-card"
-            >
-              <div className="text-4xl">{service.icon}</div>
-              <h2 className="mt-5 text-2xl font-semibold text-white">{service.title}</h2>
-              <p className="mt-3 text-slate-300">{service.description}</p>
-            </motion.div>
-          ))}
+          {services.map((service) => {
+            const orderMessage = `Hello, I want to order:
+Service: ${service.title}
+ID: ${service.id}
+Price: ${service.price ?? 'Contact for price'}
+Quantity: 1`;
+            return (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="section-card"
+              >
+                <div className="text-4xl">{service.icon}</div>
+                <h2 className="mt-5 text-2xl font-semibold text-white">{service.title}</h2>
+                <p className="mt-3 text-slate-300">{service.description}</p>
+                <p className="mt-4 text-slate-200">
+                  <span className="font-semibold text-white">Price:</span> {service.price ?? 'Contact for price'}
+                </p>
+                <div className="mt-6">
+                  <WhatsAppButton
+                    phoneNumber={whatsappNumber}
+                    message={orderMessage}
+                    type="order"
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </main>

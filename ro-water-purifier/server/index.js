@@ -18,25 +18,29 @@ const services = [
     id: 1,
     title: 'RO Water Purifier Sales',
     description: 'Premium RO systems designed for home, office and commercial spaces.',
-    icon: '💧'
+    icon: '💧',
+    price: '₹10,999'
   },
   {
     id: 2,
     title: 'RO Installation Service',
     description: 'Fast and safe installation from certified RO technicians.',
-    icon: '🛠️'
+    icon: '🛠️',
+    price: '₹2,499'
   },
   {
     id: 3,
     title: 'RO Repair & Maintenance',
     description: 'Quick diagnostics and repair for all RO purifier models.',
-    icon: '🔧'
+    icon: '🔧',
+    price: '₹1,999'
   },
   {
     id: 4,
     title: 'Filter & Membrane Replacement',
     description: 'Genuine spare parts and filter replacement plans.',
-    icon: '🔁'
+    icon: '🔁',
+    price: '₹2,999'
   }
 ];
 
@@ -45,19 +49,25 @@ const products = [
     id: 1,
     name: 'Domestic RO Water Purifier',
     description: 'Compact systems ideal for family kitchens.',
-    category: 'Domestic'
+    category: 'Domestic',
+    price: '₹12,999',
+    quantity: 1
   },
   {
     id: 2,
     name: 'Commercial RO Plant',
     description: 'High-capacity solution for offices, schools and restaurants.',
-    category: 'Commercial'
+    category: 'Commercial',
+    price: '₹49,999',
+    quantity: 1
   },
   {
     id: 3,
     name: 'Smart RO Systems',
     description: 'Connected RO systems with monitor-friendly controls.',
-    category: 'Smart'
+    category: 'Smart',
+    price: '₹24,999',
+    quantity: 1
   }
 ];
 

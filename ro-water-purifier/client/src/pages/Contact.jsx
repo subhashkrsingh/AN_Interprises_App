@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { submitContact } from '../api/index.js';
 import Loader from '../components/Loader.jsx';
 import Toast from '../components/Toast.jsx';
+import WhatsAppButton from '../components/WhatsAppButton.jsx';
 
 const serviceOptions = [
   'RO Water Purifier Sales',
@@ -14,6 +15,10 @@ const serviceOptions = [
 ];
 
 function Contact() {
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+  const contactMessage = 'Hello, I would like to know more about your services.';
+  const supportMessage = 'Hello Support Team, I need assistance regarding my account/order.';
+
   const [form, setForm] = useState({ name: '', phone: '', email: '', serviceType: serviceOptions[0], message: '' });
   const [status, setStatus] = useState({ loading: false, message: '', type: 'success' });
 
@@ -49,6 +54,18 @@ function Contact() {
         <p className="section-subtitle mx-auto mt-4">
           Reach out to book installation, repair or AMC services. Our team is ready to help with quick doorstep support.
         </p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row sm:justify-center">
+          <WhatsAppButton
+            phoneNumber={whatsappNumber}
+            message={contactMessage}
+            type="contact"
+          />
+          <WhatsAppButton
+            phoneNumber={whatsappNumber}
+            message={supportMessage}
+            type="support"
+          />
+        </div>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[1.2fr,0.8fr]">
