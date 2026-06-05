@@ -1,59 +1,101 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const userRepository = require('../repositories/userRepository');
 
-const userSchema = new mongoose.Schema(
-  {
-    fullName: { type: String, trim: true, required: true },
-    email: { type: String, trim: true, lowercase: true, unique: true, required: true },
-    username: { type: String, trim: true, lowercase: true, unique: true, required: true },
-    mobile: { type: String, trim: true, unique: true, required: true },
-    password: { type: String, required: true, select: false },
-    role: { type: String, enum: ['Super Admin', 'Admin', 'Staff', 'Customer'], default: 'Customer' },
-    avatar: { type: String, default: '' },
-    address: { type: String, trim: true, default: '' },
-    city: { type: String, trim: true, default: '' },
-    state: { type: String, trim: true, default: '' },
-    pinCode: { type: String, trim: true, default: '' },
-    isEmailVerified: { type: Boolean, default: false },
-    emailVerifyToken: { type: String },
-    passwordResetToken: { type: String },
-    passwordResetExpires: { type: Date },
-    otpCode: { type: String, select: false },
-    otpExpires: { type: Date },
-    refreshTokens: [{ token: String, createdAt: Date }],
-    googleId: { type: String, default: '' },
-    lastLoginAt: { type: Date, default: Date.now },
-  },
-  { timestamps: true }
-);
+const createUserDocument = (user) => {
+  if (!user) return null;
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
+  const document = {
+    ...user,
+    comparePassword: async function (candidatePassword) {
+      if (!this.password) return false;
+      return bcrypt.compare(candidatePassword, this.password);
+    },
+    hasValidOtp: function (otp) {
+      if (!this.otpCode || !this.otpExpires) return false;
+      return this.otpCode === otp && new Date() < new Date(this.otpExpires);
+    },
+    addRefreshToken: async function (token) {
+      await userRepository.addRefreshToken(this.id, token);
+      this.refreshTokens = this.refreshTokens || [];
+      this.refreshTokens.push({ token, createdAt: new Date() });
+      return this;
+    },
+    removeRefreshToken: async function (token) {
+      await userRepository.removeRefreshToken(token);
+      if (Array.isArray(this.refreshTokens)) {
+        this.refreshTokens = this.refreshTokens.filter((rt) => rt.token !== token);
+      }
+      return this;
+    },
+    save: async function () {
+      const updates = {
+        fullName: this.fullName,
+        email: this.email,
+        username: this.username,
+        mobile: this.mobile,
+        password: this.password,
+        role: this.role,
+        avatar: this.avatar,
+        address: this.address,
+        city: this.city,
+        state: this.state,
+        pinCode: this.pinCode,
+        isEmailVerified: this.isEmailVerified,
+        emailVerifyToken: this.emailVerifyToken,
+        passwordResetToken: this.passwordResetToken,
+        passwordResetExpires: this.passwordResetExpires,
+        otpCode: this.otpCode,
+        otpExpires: this.otpExpires,
+        googleId: this.googleId,
+        lastLoginAt: this.lastLoginAt,
+      };
+      const updated = await userRepository.updateUser(this.id, updates);
+      Object.assign(this, updated);
+      return this;
+    },
+    deleteOne: async function () {
+      await userRepository.deleteUser(this.id);
+      return this;
+    },
+  };
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  return document;
 };
 
-userSchema.methods.hasValidOtp = function (otp) {
-  if (!this.otpCode || !this.otpExpires) return false;
-  return this.otpCode === otp && new Date() < this.otpExpires;
+const buildQuery = ({ filters, multiple = false }) => {
+  let includePassword = false;
+  let includeRefreshTokens = !multiple;
+
+  const exec = async () => {
+    if (multiple) {
+      const rows = await userRepository.findMany();
+      return rows.map(createUserDocument);
+    }
+    const user = await userRepository.findOne(filters, {
+      includePassword,
+      includeRefreshTokens,
+    });
+    return createUserDocument(user);
+  };
+
+  return {
+    select: async (fields) => {
+      const normalized = fields.split(' ').filter(Boolean);
+      includePassword = normalized.some((field) => field.includes('+password'));
+      includeRefreshTokens = includeRefreshTokens || normalized.includes('refreshTokens');
+      return exec();
+    },
+    then: (resolve, reject) => exec().then(resolve, reject),
+    catch: (fn) => exec().catch(fn),
+    exec,
+  };
 };
 
-userSchema.methods.addRefreshToken = function (token) {
-  this.refreshTokens.push({ token, createdAt: new Date() });
-  return this.save();
+const User = {
+  findOne: (filters) => buildQuery({ filters, multiple: false }),
+  findById: (id) => buildQuery({ filters: { id }, multiple: false }),
+  find: () => buildQuery({ filters: null, multiple: true }),
+  create: async (data) => createUserDocument(await userRepository.createUser(data)),
 };
 
-userSchema.methods.removeRefreshToken = function (token) {
-  this.refreshTokens = this.refreshTokens.filter((rt) => rt.token !== token);
-  return this.save();
-};
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = User;

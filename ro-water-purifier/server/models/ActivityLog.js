@@ -1,13 +1,17 @@
-const mongoose = require('mongoose');
+const activityLogRepository = require('../repositories/activityLogRepository');
 
-const activityLogSchema = new mongoose.Schema(
-  {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { type: String, required: true },
-    ipAddress: { type: String, default: '' },
-    metadata: { type: Object, default: {} },
-  },
-  { timestamps: true }
-);
+const mapActivityLog = (row) => ({
+  id: row.id,
+  userId: row.userId,
+  type: row.type,
+  ipAddress: row.ipAddress,
+  metadata: row.metadata,
+  createdAt: row.createdAt,
+  updatedAt: row.updatedAt,
+});
 
-module.exports = mongoose.model('ActivityLog', activityLogSchema);
+const ActivityLog = {
+  create: async (data) => mapActivityLog(await activityLogRepository.createActivityLog(data)),
+};
+
+module.exports = ActivityLog;
