@@ -1,12 +1,11 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import useDocumentTitle from '../hooks/useDocumentTitle.js';
 
 function About() {
+  useDocumentTitle('About Us | Best RO Water Purifier Sales & Service Provider');
+
   return (
     <main className="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8">
-      <Helmet>
-        <title>About Us | Best RO Water Purifier Sales & Service Provider</title>
-      </Helmet>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

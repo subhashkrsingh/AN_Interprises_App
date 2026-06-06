@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { getServices, getProducts, getTestimonials, getFaqs, submitContact } from '../api/index.js';
 import FAQAccordion from '../components/FAQAccordion.jsx';
 import Loader from '../components/Loader.jsx';
 import Toast from '../components/Toast.jsx';
+import useDocumentTitle from '../hooks/useDocumentTitle.js';
 
 const checklist = [
   '100% Safe Drinking Water',
@@ -32,6 +32,8 @@ const initialForm = {
 };
 
 function Home() {
+  useDocumentTitle('Best RO Water Purifier Sales & Service Provider');
+
   const [services, setServices] = useState([]);
   const [products, setProducts] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
@@ -88,10 +90,6 @@ function Home() {
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 sm:px-6 lg:px-8">
-      <Helmet>
-        <title>Best RO Water Purifier Sales & Service Provider</title>
-      </Helmet>
-
       <section className="relative overflow-hidden rounded-[2rem] border border-slate-700/80 bg-navy/90 px-6 py-16 shadow-soft sm:px-12 sm:py-20 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
