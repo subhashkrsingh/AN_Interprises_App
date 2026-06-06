@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import WhatsAppButton from './components/WhatsAppButton.jsx';
@@ -13,17 +13,19 @@ import ForgotPassword from './pages/ForgotPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Settings from './pages/Settings.jsx';
-import Admin from './pages/Admin.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import AdminRoutes from './routes/AdminRoutes.jsx';
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
   const supportMessage = 'Hello Support Team, I need assistance regarding my account/order.';
 
   return (
     <div className="relative min-h-screen bg-navy text-slate-100">
-      <Navbar />
+      {!isAdminRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
@@ -33,6 +35,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
         <Route
           path="/dashboard"
           element={
@@ -57,24 +60,18 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer />
-      <WhatsAppButton
-        phoneNumber={whatsappNumber}
-        message={supportMessage}
-        type="support"
-        isFloating
-      />
+      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && (
+        <WhatsAppButton
+          phoneNumber={whatsappNumber}
+          message={supportMessage}
+          type="support"
+          isFloating
+        />
+      )}
     </div>
   );
 }

@@ -1,19 +1,21 @@
-const path = require("path");
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const fs = require("fs").promises;
-const { connectDB } = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
-const profileRoutes = require("./routes/profileRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const errorHandler = require("./middleware/errorHandler");
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+const path = require('path');
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const fs = require('fs').promises;
+const { connectDB } = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const errorHandler = require('./middleware/errorHandler');
+
+// Load environment variables early
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
-const CONTACTS_FILE = path.join(__dirname, "contacts.json");
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const CONTACTS_FILE = path.join(__dirname, 'contacts.json');
 
 const services = [
   {
@@ -132,7 +134,7 @@ app.use(
   cors({
     origin: CLIENT_ORIGIN,
     credentials: true,
-  }),
+  })
 );
 app.use(express.json());
 app.use(cookieParser());
@@ -146,7 +148,7 @@ app.get("/api/products", (req, res) => res.json(products));
 app.get("/api/testimonials", (req, res) => res.json(testimonials));
 app.get("/api/faqs", (req, res) => res.json(faqs));
 
-app.post("/api/contact", async (req, res, next) => {
+app.post('/api/contact', async (req, res, next) => {
   const { name, phone, email, serviceType, message } = req.body;
   if (!name || !phone || !email || !serviceType || !message) {
     return res.status(422).json({ success: false, message: "Please fill out all contact fields." });
@@ -171,10 +173,18 @@ app.post("/api/contact", async (req, res, next) => {
 });
 
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Resource not found." });
+  res.status(404).json({ success: false, message: 'Resource not found.' });
 });
 
 app.use(errorHandler);
+
+// Validate required environment variables before starting
+const requiredEnvs = ['PORT', 'DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'CLIENT_ORIGIN', 'GOOGLE_CLIENT_ID'];
+const missing = requiredEnvs.filter((k) => !process.env[k]);
+if (missing.length) {
+  console.error('Missing required environment variables:', missing.join(', '));
+  process.exit(1);
+}
 
 const startServer = async () => {
   try {
@@ -183,7 +193,7 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Server startup failed:", error.message);
+    console.error('Server startup failed:', error.message);
     process.exit(1);
   }
 };

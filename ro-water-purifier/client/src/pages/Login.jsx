@@ -7,10 +7,12 @@ import { loginSchema } from '../utils/validators.js';
 import AuthLayout from '../components/AuthLayout.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { useAuth } from '../hooks/useAuth.js';
+import GoogleLoginButton from '../components/GoogleLoginButton.jsx';
 
 function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
+  const { oauthLogin } = useAuth();
   const [serverError, setServerError] = useState('');
 
   const {
@@ -96,13 +98,15 @@ function Login() {
           </button>
         </form>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" className="rounded-3xl border border-slate-700/80 bg-slate-900/90 px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-slate-800">
-            Login with Google
-          </button>
-          <button type="button" className="rounded-3xl border border-slate-700/80 bg-slate-900/90 px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-slate-800">
-            Login with GitHub
-          </button>
+        <div className="grid gap-3 sm:grid-cols-1">
+          <GoogleLoginButton
+            setLoading={() => {}}
+            setError={() => {}}
+            onSuccess={(data) => {
+              oauthLogin(data, true);
+              navigate('/dashboard');
+            }}
+          />
         </div>
 
         <div className="rounded-3xl border border-slate-700/70 bg-slate-950/50 p-4 text-sm text-slate-300">

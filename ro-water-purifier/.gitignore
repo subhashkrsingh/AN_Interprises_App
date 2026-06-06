@@ -2,6 +2,10 @@ node_modules
 dist
 build
 .env
+logs
+server/logs
+uploads
+server/uploads
 .DS_Store
 npm-debug.log*
 yarn-debug.log*

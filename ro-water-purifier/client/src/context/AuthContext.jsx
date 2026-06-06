@@ -53,9 +53,10 @@ function AuthProvider({ children }) {
         if (token) {
           initializeAuth(token);
           const me = await authService.fetchMe();
-          setCurrentUser(me);
+          const user = me && me.user ? me.user : me;
+          setCurrentUser(user);
           const remember = Boolean(localStorage.getItem(STORAGE_KEYS.token));
-          writeStorage(STORAGE_KEYS.user, JSON.stringify(me), remember);
+          writeStorage(STORAGE_KEYS.user, JSON.stringify(user), remember);
         } else {
           const refreshData = await authService.refreshToken();
           persistSession(refreshData, true);
@@ -82,6 +83,11 @@ function AuthProvider({ children }) {
     writeStorage(STORAGE_KEYS.token, accessToken, persistedRemember);
     writeStorage(STORAGE_KEYS.user, JSON.stringify(user), persistedRemember);
     writeStorage(STORAGE_KEYS.loginTime, new Date().toISOString(), persistedRemember);
+  };
+
+  const oauthLogin = (data, remember = true) => {
+    // data is expected to contain { accessToken, user }
+    persistSession(data, remember);
   };
 
   const clearSession = () => {
@@ -163,6 +169,7 @@ function AuthProvider({ children }) {
       login,
       logout: handleLogout,
       register,
+      oauthLogin,
       forgotPassword,
     }),
     [currentUser, token, loading]

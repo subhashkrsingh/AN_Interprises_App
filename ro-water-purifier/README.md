@@ -1,45 +1,71 @@
-# RO Water Purifier Business Website
+# RO Water Purifier Website + Enterprise E-Commerce Admin
 
-Full-stack RO Water Purifier Business website with a React + Vite frontend and Node.js + Express backend.
+Full-stack RO Water Purifier business website with a React + Vite frontend, Node.js backend, and an enterprise e-commerce admin panel powered by PostgreSQL and Prisma.
 
-## Project structure
+## Project Structure
 
-- `client/` — React + Vite frontend
-- `server/` — Node.js + Express backend
+- `client/` - React 19 + Vite frontend with MUI admin panel
+- `server/` - Node.js + Express backend with Prisma/PostgreSQL admin APIs
+- `docs/` - installation, API, schema and deployment guides
+- `docker/` - Docker build files
 
-## Setup
+## Admin Features
 
-1. Install dependencies for server and client:
+- JWT authentication, refresh tokens, forgot/reset/change password
+- Role based access control with users, roles and permissions
+- Dashboard statistics, sales charts, revenue graphs and low-stock alerts
+- Product, category, brand, order, customer, inventory, coupon, banner, CMS, review, settings and log management
+- Product image upload support through Multer
+- CSV, Excel and PDF report exports
+- Activity logging and Winston backend logs
 
-```bash
-cd ro-water-purifier/server
-npm install
-cd ../client
-npm install
-```
+## Local Setup
 
-2. Create environment files:
-
-- Copy `.env.example` into `ro-water-purifier/.env`
-- In `client`, create `.env` with `VITE_API_URL=http://localhost:5000`
-- In `server`, create `.env` with `PORT=5000` and `CLIENT_ORIGIN=http://localhost:5173`
-
-3. Run backend and frontend:
+Backend:
 
 ```bash
-cd ro-water-purifier/server
+cd server
+npm install
+copy .env.example .env
+npm run prisma:generate
+npm run prisma:migrate
+npm run db:seed
 npm run dev
 ```
 
-In another terminal:
+Frontend:
 
 ```bash
-cd ro-water-purifier/client
+cd client
+npm install
+copy .env.example .env
 npm run dev
 ```
 
-## Notes
+Open:
 
-- The frontend uses `VITE_API_URL` to connect to the backend.
-- Contact submissions are saved to `server/contacts.json`.
-- The backend includes validation and centralized error handling.
+```text
+http://localhost:5173/admin/login
+```
+
+Seeded admin:
+
+```text
+superadmin@example.com
+Admin@12345
+```
+
+## Docker
+
+```bash
+docker compose up --build
+docker compose exec server npm run db:seed
+```
+
+## Documentation
+
+- `docs/installation-guide.md`
+- `docs/database-schema.md`
+- `docs/api-reference.md`
+- `docs/folder-structure.md`
+- `docs/deployment-guide.md`

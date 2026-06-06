@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { getServices } from '../api/index.js';
 import Loader from '../components/Loader.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
+import useDocumentTitle from '../hooks/useDocumentTitle.js';
 
 function Services() {
+  useDocumentTitle('Services | Best RO Water Purifier Sales & Service Provider');
+
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,9 +29,6 @@ function Services() {
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8">
-      <Helmet>
-        <title>Services | Best RO Water Purifier Sales & Service Provider</title>
-      </Helmet>
       <div className="mb-10 text-center">
         <p className="text-cyan font-semibold uppercase tracking-[0.3em]">Our Services</p>
         <h1 className="section-title mt-4">Complete RO Service & Support</h1>
