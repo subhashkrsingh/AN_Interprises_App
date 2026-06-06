@@ -1,5 +1,4 @@
 import { useGoogleLogin } from '@react-oauth/google';
-import axios from 'axios';
 import { FcGoogle } from 'react-icons/fc';
 import authService from '../services/authService.js';
 
@@ -9,8 +8,8 @@ function GoogleLoginButton({ onSuccess, setError, setLoading }) {
       setLoading(true);
       setError('');
       try {
-        const response = await axios.post('/api/auth/google', { credential: tokenResponse.credential }, { withCredentials: true });
-        onSuccess(response.data);
+        const data = await authService.googleLogin({ credential: tokenResponse.credential });
+        onSuccess(data);
       } catch (error) {
         setError(error?.response?.data?.message || 'Google login failed.');
       } finally {

@@ -8,7 +8,7 @@ const DEFAULT_LABELS = {
   support: 'Get Support',
 };
 
-function WhatsAppButton({ phoneNumber, message, type, isFloating = false }) {
+function WhatsAppButton({ phoneNumber = undefined, message = '', type = 'contact', isFloating = false }) {
   const isPhoneValid = isValidWhatsAppNumber(phoneNumber);
   const isLoading = phoneNumber === undefined;
   const buttonLabel = DEFAULT_LABELS[type] || 'WhatsApp Chat';
@@ -57,14 +57,9 @@ function WhatsAppButton({ phoneNumber, message, type, isFloating = false }) {
 
 WhatsAppButton.propTypes = {
   phoneNumber: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  message: PropTypes.string.isRequired,
-  type: PropTypes.oneOf(['contact', 'order', 'support']).isRequired,
+  message: PropTypes.string,
+  type: PropTypes.oneOf(['contact', 'order', 'support']),
   isFloating: PropTypes.bool,
-};
-
-WhatsAppButton.defaultProps = {
-  phoneNumber: undefined,
-  isFloating: false,
 };
 
 export default WhatsAppButton;
