@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-ALTER TABLE users ADD CONSTRAINT IF NOT EXISTS users_email_unique UNIQUE (email);
-ALTER TABLE users ADD CONSTRAINT IF NOT EXISTS users_username_unique UNIQUE (username);
-ALTER TABLE users ADD CONSTRAINT IF NOT EXISTS users_mobile_unique UNIQUE (mobile);
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users (email);
+CREATE UNIQUE INDEX IF NOT EXISTS users_username_unique ON users (username);
+CREATE UNIQUE INDEX IF NOT EXISTS users_mobile_unique ON users (mobile);
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id BIGSERIAL PRIMARY KEY,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-ALTER TABLE refresh_tokens ADD CONSTRAINT IF NOT EXISTS refresh_tokens_token_unique UNIQUE (token);
+CREATE UNIQUE INDEX IF NOT EXISTS refresh_tokens_token_unique ON refresh_tokens (token);
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id BIGSERIAL PRIMARY KEY,
