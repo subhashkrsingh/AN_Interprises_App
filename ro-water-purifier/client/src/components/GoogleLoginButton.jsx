@@ -3,20 +3,28 @@ import { FcGoogle } from 'react-icons/fc';
 import authService from '../services/authService.js';
 
 function GoogleLoginButton({ onSuccess, setError, setLoading }) {
+  const handleGoogleSuccess = async (tokenResponse) => {
+    if (setLoading) setLoading(true);
+    if (setError) setError('');
+    try {
+      // The tokenResponse.credential contains the ID token
+      const data = await authService.googleLogin({ credential: tokenResponse.credential });
+      if (onSuccess) onSuccess(data);
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Google login failed.';
+      if (setError) setError(message);
+      console.error('Google login error:', error);
+    } finally {
+      if (setLoading) setLoading(false);
+    }
+  };
+
   const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await authService.googleLogin({ credential: tokenResponse.credential });
-        onSuccess(data);
-      } catch (error) {
-        setError(error?.response?.data?.message || 'Google login failed.');
-      } finally {
-        setLoading(false);
-      }
+    onSuccess: handleGoogleSuccess,
+    onError: () => {
+      if (setError) setError('Google sign-in was cancelled or failed.');
     },
-    onError: () => setError('Google sign-in was cancelled or failed.'),
+    flow: 'implicit',
   });
 
   return (

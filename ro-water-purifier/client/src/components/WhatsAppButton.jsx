@@ -8,7 +8,12 @@ const DEFAULT_LABELS = {
   support: 'Get Support',
 };
 
-function WhatsAppButton({ phoneNumber = undefined, message = '', type = 'contact', isFloating = false }) {
+function WhatsAppButton({ 
+  phoneNumber, 
+  message = '', 
+  type = 'contact', 
+  isFloating = false 
+}) {
   const isPhoneValid = isValidWhatsAppNumber(phoneNumber);
   const isLoading = phoneNumber === undefined;
   const buttonLabel = DEFAULT_LABELS[type] || 'WhatsApp Chat';

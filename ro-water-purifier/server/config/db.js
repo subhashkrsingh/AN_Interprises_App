@@ -1,4 +1,6 @@
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 2000;
@@ -29,20 +31,36 @@ pool.on('error', (error) => {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const initializeSchema = async (client) => {
+  try {
+    const schemaPath = path.join(__dirname, '..', 'schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+    await client.query(schema);
+    console.log('✅ Database schema initialized');
+  } catch (error) {
+    console.error('⚠️ Schema initialization warning:', error.message);
+    // Don't throw - tables might already exist
+  }
+};
+
 const connectDB = async () => {
   let attempt = 0;
   while (attempt < MAX_RETRIES) {
     try {
       const client = await pool.connect();
       await client.query('SELECT 1');
+      
+      // Initialize schema on first successful connection
+      await initializeSchema(client);
+      
       client.release();
-      console.log('PostgreSQL connected');
+      console.log('✅ PostgreSQL connected and initialized');
       return;
     } catch (error) {
       attempt += 1;
       console.error(`PostgreSQL connection attempt ${attempt} failed:`, error.message);
       if (attempt >= MAX_RETRIES) {
-        console.error('Unable to connect to PostgreSQL after multiple attempts.');
+        console.error('❌ Unable to connect to PostgreSQL after multiple attempts.');
         throw error;
       }
       await wait(RETRY_DELAY_MS);
