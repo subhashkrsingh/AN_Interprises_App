@@ -30,7 +30,7 @@ copy .env.example .env
 npm run prisma:generate
 npm run prisma:migrate
 npm run db:seed
-npm run dev
+npm run dev 
 ```
 
 Frontend:

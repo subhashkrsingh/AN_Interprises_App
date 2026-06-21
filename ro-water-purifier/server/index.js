@@ -173,6 +173,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 
+console.log('🚀 Auth endpoints mounted under /api/auth');
+console.log('   - POST /api/auth/login');
+console.log('   - POST /api/auth/register');
+console.log('   - POST /api/auth/refresh');
+console.log('   - POST /api/auth/logout');
+console.log('   - GET  /api/auth/me');
+
 app.get("/api/services", (req, res) => res.json(services));
 app.get("/api/products", (req, res) => res.json(products));
 app.get("/api/testimonials", (req, res) => res.json(testimonials));

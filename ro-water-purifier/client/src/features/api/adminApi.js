@@ -1,26 +1,52 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { clearCredentials, setCredentials, setUser } from '../auth/authSlice.js';
 
-const baseUrl = import.meta.env.VITE_ADMIN_API_URL || 'http://localhost:5000/api/admin';
+const normalizeApiBaseUrl = (url, fallback) => {
+  if (!url) return fallback;
+  const trimmed = url.toString().trim().replace(/\/$/, '');
+  if (trimmed.endsWith('/api') || trimmed.endsWith('/api/admin')) return trimmed;
+  if (trimmed.includes('/api/')) return trimmed;
+  return `${trimmed}/api`;
+};
 
-const rawBaseQuery = fetchBaseQuery({
-  baseUrl,
+const apiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_URL, 'http://localhost:5000/api');
+const defaultAdminBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '/api/admin');
+const adminBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_ADMIN_API_URL, defaultAdminBaseUrl);
+
+const prepareAuthHeaders = (headers, { getState }) => {
+  const token = getState().auth.token;
+  if (token) headers.set('authorization', `Bearer ${token}`);
+  return headers;
+};
+
+const authBaseQuery = fetchBaseQuery({
+  baseUrl: apiBaseUrl,
   credentials: 'include',
-  prepareHeaders: (headers, { getState }) => {
-    const token = getState().auth.token;
-    if (token) headers.set('authorization', `Bearer ${token}`);
-    return headers;
-  },
+  prepareHeaders: prepareAuthHeaders,
 });
 
-const baseQueryWithRefresh = async (args, api, extraOptions) => {
-  let result = await rawBaseQuery(args, api, extraOptions);
+const adminBaseQuery = fetchBaseQuery({
+  baseUrl: adminBaseUrl,
+  credentials: 'include',
+  prepareHeaders: prepareAuthHeaders,
+});
 
-  if (result.error?.status === 401 && !String(args?.url || args).includes('/auth/refresh')) {
-    const refresh = await rawBaseQuery({ url: '/auth/refresh', method: 'POST' }, api, extraOptions);
-    if (refresh.data?.data?.accessToken) {
-      api.dispatch(setCredentials({ ...refresh.data.data, remember: true }));
-      result = await rawBaseQuery(args, api, extraOptions);
+const isAuthRequest = (request) => {
+  const url = typeof request === 'string' ? request : request?.url;
+  if (!url) return false;
+  return url.startsWith('/auth') || url.startsWith(`${apiBaseUrl}/auth`) || url.includes('/api/auth');
+};
+
+const baseQueryWithRefresh = async (args, api, extraOptions) => {
+  const targetBaseQuery = isAuthRequest(args) ? authBaseQuery : adminBaseQuery;
+  let result = await targetBaseQuery(args, api, extraOptions);
+
+  if (result.error?.status === 401 && !isAuthRequest(args)) {
+    const refresh = await authBaseQuery({ url: '/auth/refresh', method: 'POST' }, api, extraOptions);
+    const refreshData = refresh.data?.data ?? refresh.data;
+    if (refreshData?.accessToken) {
+      api.dispatch(setCredentials({ ...refreshData, remember: true }));
+      result = await targetBaseQuery(args, api, extraOptions);
     } else {
       api.dispatch(clearCredentials());
     }
