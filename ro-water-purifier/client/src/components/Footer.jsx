@@ -25,9 +25,9 @@ function Footer() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Contact</h3>
-            <p className="mt-4 text-slate-400">Phone: +91 98765 43210</p>
-            <p className="mt-2 text-slate-400">Email: support@ropurecare.com</p>
-            <p className="mt-2 text-slate-400">123 Aqua Lane, Clean City</p>
+            <p className="mt-4 text-slate-400">Phone: +91 9560342801</p>
+            <p className="mt-2 text-slate-400">guptaashu421@gmail.com</p>
+            <p className="mt-2 text-slate-400">BH-28 NTPC TOWNSHIP VIDHUYT NAGAR DADRI</p>
           </div>
         </div>
         <div className="mt-10 border-t border-slate-700/50 pt-6 text-sm text-slate-500">

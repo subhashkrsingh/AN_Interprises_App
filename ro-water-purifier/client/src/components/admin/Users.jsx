@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAdminUsers } from '../services/auditService.js';
+import { getAdminUsers } from '../../../services/auditService.js';
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);

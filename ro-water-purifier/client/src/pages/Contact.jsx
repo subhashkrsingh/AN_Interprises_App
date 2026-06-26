@@ -4,7 +4,7 @@ import { submitContact } from '../api/index.js';
 import Loader from '../components/Loader.jsx';
 import Toast from '../components/Toast.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
-import useDocumentTitle from '../hooks/useDocumentTitle.js';
+import useDocumentTitle from '../hooks/useDocumentTitle.jsx';
 
 const serviceOptions = [
   'RO Water Purifier Sales',
@@ -161,21 +161,21 @@ function Contact() {
               <span className="text-2xl">📞</span>
               <div>
                 <h3 className="font-semibold text-white">Call Us</h3>
-                <p className="text-slate-300">+91 98765 43210</p>
+                <p className="text-slate-300">+91 9560342801</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <span className="text-2xl">✉️</span>
               <div>
                 <h3 className="font-semibold text-white">Email Us</h3>
-                <p className="text-slate-300">support@ropurecare.com</p>
+                <p className="text-slate-300">guptaashu421@gmail.com</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <span className="text-2xl">📌</span>
               <div>
                 <h3 className="font-semibold text-white">Visit Our Store</h3>
-                <p className="text-slate-300">123 Aqua Lane, Clean City</p>
+                <p className="text-slate-300"></p>
               </div>
             </div>
           </div>

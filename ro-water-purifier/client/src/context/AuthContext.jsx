@@ -1,181 +1,180 @@
-import { createContext, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import authService, { clearAuthTokens, initializeAuth } from '../services/authService.js';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  login as apiLogin,
+  register as apiRegister,
+  logout as apiLogout,
+  getCurrentUserFromStorage,
+  clearAuthData,
+  forgotPassword as apiForgotPassword, // ✅ FIX ADDED
+} from "../api/index.js";
 
-const AuthContext = createContext({});
+// Create context
+const AuthContext = createContext(null);
 
-const STORAGE_KEYS = {
-  token: 'auth_access_token',
-  user: 'auth_current_user',
-  loginTime: 'auth_last_login',
-};
-
-const readStorage = (key) => sessionStorage.getItem(key) ?? localStorage.getItem(key);
-const writeStorage = (key, value, remember) => {
-  if (remember) {
-    localStorage.setItem(key, value);
-    sessionStorage.removeItem(key);
-  } else {
-    sessionStorage.setItem(key, value);
-    localStorage.removeItem(key);
-  }
-};
-const clearStorage = (key) => {
-  localStorage.removeItem(key);
-  sessionStorage.removeItem(key);
-};
-
-const readJsonStorage = (key) => {
-  const raw = readStorage(key);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-};
-
-function AuthProvider({ children }) {
-  const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(() => readJsonStorage(STORAGE_KEYS.user));
-  const [token, setToken] = useState(() => readStorage(STORAGE_KEYS.token));
+// Provider
+export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Load user on app start
   useEffect(() => {
-    if (token) {
-      initializeAuth(token);
+    const token =
+      localStorage.getItem("auth_token") ||
+      sessionStorage.getItem("auth_token");
+
+    const user = getCurrentUserFromStorage();
+
+    if (token && user) {
+      setCurrentUser(user);
+      setIsAuthenticated(true);
     }
-  }, [token]);
 
-  useEffect(() => {
-    const restoreSession = async () => {
-      try {
-        if (token) {
-          initializeAuth(token);
-          const me = await authService.fetchMe();
-          const user = me && me.user ? me.user : me;
-          setCurrentUser(user);
-          const remember = Boolean(localStorage.getItem(STORAGE_KEYS.token));
-          writeStorage(STORAGE_KEYS.user, JSON.stringify(user), remember);
-        } else {
-          const refreshData = await authService.refreshToken();
-          persistSession(refreshData, true);
-        }
-      } catch (error) {
-        clearSession();
-      } finally {
-        setLoading(false);
+    setLoading(false);
+  }, []);
+
+  // LOGIN
+  const login = async (credentials, remember = false) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await apiLogin(credentials);
+
+      const user = response?.data?.user || response.user;
+      const token = response?.data?.token || response.token;
+
+      if (remember) {
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("auth_user", JSON.stringify(user));
+      } else {
+        sessionStorage.setItem("auth_token", token);
+        sessionStorage.setItem("auth_user", JSON.stringify(user));
       }
+
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+
+      return { success: true, user };
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.message || err.message || "Login failed";
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // REGISTER
+  const register = async (userData) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await apiRegister(userData);
+
+      const user = response?.data?.user || response.user;
+      const token = response?.data?.token || response.token;
+
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("auth_user", JSON.stringify(user));
+
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+
+      return { success: true, user };
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.message || err.message || "Registration failed";
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // FORGOT PASSWORD
+  const forgotPassword = async ({ email }) => {
+    setError(null);
+
+    try {
+      await apiForgotPassword({ email });
+      return { message: "Password reset link sent" };
+    } catch (err) {
+      const errorMessage =
+        err?.response?.data?.message || err.message || "Failed request";
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  // OAuth login
+  const oauthLogin = async (data, remember = false) => {
+    const user = {
+      id: Date.now(),
+      fullName: data.name || "OAuth User",
+      email: data.email,
+      username: data.email?.split("@")[0],
+      role: "user",
     };
 
-    restoreSession();
-  }, [token]);
+    const token = "oauth-token-" + Date.now();
 
-  const persistSession = (data, remember) => {
-    if (!data) return;
+    if (remember) {
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("auth_user", JSON.stringify(user));
+    } else {
+      sessionStorage.setItem("auth_token", token);
+      sessionStorage.setItem("auth_user", JSON.stringify(user));
+    }
 
-    const { accessToken, user } = data;
-    const persistedRemember = remember ?? true;
-
-    setToken(accessToken);
     setCurrentUser(user);
-    initializeAuth(accessToken);
-    writeStorage(STORAGE_KEYS.token, accessToken, persistedRemember);
-    writeStorage(STORAGE_KEYS.user, JSON.stringify(user), persistedRemember);
-    writeStorage(STORAGE_KEYS.loginTime, new Date().toISOString(), persistedRemember);
+    setIsAuthenticated(true);
+
+    return { success: true, user };
   };
 
-  const oauthLogin = (data, remember = true) => {
-    // data is expected to contain { accessToken, user }
-    persistSession(data, remember);
-  };
-
-  const clearSession = () => {
-    setToken(null);
+  // LOGOUT
+  const logout = () => {
+    clearAuthData();
     setCurrentUser(null);
-    clearAuthTokens();
-    clearStorage(STORAGE_KEYS.token);
-    clearStorage(STORAGE_KEYS.user);
-    clearStorage(STORAGE_KEYS.loginTime);
+    setIsAuthenticated(false);
   };
 
-  const handleLogout = async (quiet = false) => {
-    try {
-      await authService.logout();
-    } catch {
-      // continue to clear client state regardless of logout response
-    }
-
-    clearSession();
-
-    if (!quiet) {
-      navigate('/login');
-    }
-  };
-
-  const login = async (payload, remember) => {
-    setLoading(true);
-    try {
-      const sanitizedPayload = {
-        ...payload,
-        identifier: payload.identifier?.trim?.(),
-        password: payload.password?.trim?.(),
-      };
-      const data = await authService.login(sanitizedPayload);
-      persistSession(data, remember);
-      return data;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (payload) => {
-    setLoading(true);
-    try {
-      const sanitizedPayload = {
-        ...payload,
-        fullName: payload.fullName?.trim?.(),
-        email: payload.email?.trim?.().toLowerCase(),
-        mobile: payload.mobile?.trim?.(),
-        username: payload.username?.trim?.(),
-        password: payload.password?.trim?.(),
-      };
-      const data = await authService.register(sanitizedPayload);
-      persistSession(data, true);
-      return data;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const forgotPassword = async (payload) => {
-    setLoading(true);
-    try {
-      const sanitizedPayload = {
-        email: payload.email?.trim?.().toLowerCase(),
-      };
-      const data = await authService.forgotPassword(sanitizedPayload);
-      return data;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const value = useMemo(
-    () => ({
-      currentUser,
-      isAuthenticated: Boolean(token && currentUser),
-      loading,
-      login,
-      logout: handleLogout,
-      register,
-      oauthLogin,
-      forgotPassword,
-    }),
-    [currentUser, token, loading]
+  return (
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        isAuthenticated,
+        loading,
+        error,
+        login,
+        register,
+        logout,
+        forgotPassword,
+        oauthLogin,
+        setError,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export { AuthContext, AuthProvider };
+// CUSTOM HOOK
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
+
+  return context;
+}
+
+export default AuthContext;

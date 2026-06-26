@@ -1,24 +1,19 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
-import Loader from './Loader.jsx';
+import { useAuth } from '../context/AuthContext';
 
-function ProtectedRoute({ children, allowedRoles }) {
-  const { isAuthenticated, loading, currentUser } = useAuth();
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-navy px-4">
-        <Loader />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-cyan text-xl">Loading...</div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles?.length && !allowedRoles.includes(currentUser?.role)) {
-    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

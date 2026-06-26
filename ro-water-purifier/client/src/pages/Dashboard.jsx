@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import AuthStatusIndicator from '../components/AuthStatusIndicator.jsx';
 
 function Dashboard() {

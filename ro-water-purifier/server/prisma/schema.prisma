@@ -174,38 +174,16 @@ enum BlogStatus {
 }
 
 model User {
-  id                     String               @id @default(cuid())
-  name                   String
-  email                  String               @unique
-  phone                  String?
-  passwordHash           String
-  status                 UserStatus           @default(ACTIVE)
-  avatarUrl              String?
-  twoFactorEnabled       Boolean              @default(false)
-  twoFactorSecret        String?
-  twoFactorBackupCodes   Json?
-  lastLoginAt            DateTime?
-  refreshTokenHash       String?
-  refreshTokenExpires    DateTime?
-  passwordResetTokenHash String?
-  passwordResetExpires   DateTime?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  deletedAt              DateTime?
-  roles                  UserRole[]
-  sessions               UserSession[]
-  loginHistory           LoginHistory[]
-  twoFactorChallenges    TwoFactorChallenge[]
-  assignedLeads          Lead[]               @relation("LeadAssignee")
-  customerNotes          CustomerNote[]
-  leadFollowups          LeadFollowup[]
-  notifications          Notification[]
-  activityLogs           ActivityLog[]
-  engineerProfile        Engineer?
+  id        String   @id @default(cuid())
+  fullName  String
+  username  String   @unique
+  email     String   @unique
+  mobile    String?
+  password  String
+  status    String   @default("ACTIVE")
 
-  @@index([status])
-  @@index([createdAt])
-  @@map("users")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Role {

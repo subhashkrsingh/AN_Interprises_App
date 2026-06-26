@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { forgotPasswordSchema } from '../utils/validators.js';
+import { z } from 'zod';
 import AuthLayout from '../components/AuthLayout.jsx';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../context/AuthContext.jsx';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+});
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -29,6 +33,7 @@ function ForgotPassword() {
 
   if (isAuthenticated) {
     navigate('/dashboard');
+    return null;
   }
 
   const onSubmit = async ({ email }) => {
@@ -39,21 +44,22 @@ function ForgotPassword() {
       const response = await forgotPassword({ email });
       setServerMessage(response?.message || 'If your email exists, a reset link has been sent.');
     } catch (error) {
-      setServerError(error?.response?.data?.message || 'Unable to send reset instructions.');
+      setServerError(error?.message || 'Unable to send reset instructions.');
     }
   };
 
   return (
     <AuthLayout
       title="Forgot password"
-      description="Enter your email address and we&apos;ll send you instructions to reset your password securely."
+      description="Enter your email address and we'll send you instructions to reset your password securely."
       aside={
         <div className="space-y-2 rounded-3xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
           <p className="font-semibold text-slate-100">Password recovery</p>
           <p>We send a secure reset link if your account is recognized.</p>
           <p>If you remember your password, go back to login.</p>
         </div>
-      }>
+      }
+    >
       <div className="space-y-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
@@ -70,13 +76,22 @@ function ForgotPassword() {
             {errors.email && <p className="text-sm text-rose-400">{errors.email.message}</p>}
           </div>
 
-          {serverMessage && <p className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{serverMessage}</p>}
-          {serverError && <p className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{serverError}</p>}
+          {serverMessage && (
+            <p className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+              {serverMessage}
+            </p>
+          )}
+          {serverError && (
+            <p className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              {serverError}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-3xl bg-cyan px-5 py-3 text-sm font-semibold text-navy transition hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60">
+            className="w-full rounded-3xl bg-cyan px-5 py-3 text-sm font-semibold text-navy transition hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
             {isSubmitting ? 'Sending reset link...' : 'Send reset instructions'}
           </button>
         </form>

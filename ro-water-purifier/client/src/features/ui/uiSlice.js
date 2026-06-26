@@ -1,19 +1,19 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialMode = localStorage.getItem('admin_theme_mode') || 'dark';
+const initialState = {
+  mode: localStorage.getItem('admin_theme') || 'dark',
+  sidebarOpen: false,
+};
 
 const uiSlice = createSlice({
   name: 'ui',
-  initialState: {
-    mode: initialMode,
-    sidebarOpen: false,
-  },
+  initialState,
   reducers: {
-    toggleMode(state) {
+    toggleMode: (state) => {
       state.mode = state.mode === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('admin_theme_mode', state.mode);
+      localStorage.setItem('admin_theme', state.mode);
     },
-    setSidebarOpen(state, action) {
+    setSidebarOpen: (state, action) => {
       state.sidebarOpen = action.payload;
     },
   },

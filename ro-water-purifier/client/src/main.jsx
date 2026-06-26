@@ -8,7 +8,15 @@ import AppProviders from './app/AppProviders.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import './index.css';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

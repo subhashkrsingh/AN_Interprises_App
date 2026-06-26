@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import useDocumentTitle from '../hooks/useDocumentTitle.js';
+import useDocumentTitle from '../hooks/useDocumentTitle.jsx';
 
 function About() {
   useDocumentTitle('About Us | Best RO Water Purifier Sales & Service Provider');

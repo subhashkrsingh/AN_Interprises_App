@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion } from 'framer-motion';
-import { loginSchema } from '../utils/validators.js';
+import { z } from 'zod';
 import AuthLayout from '../components/AuthLayout.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
-import { useAuth } from '../hooks/useAuth.js';
-import GoogleLoginButton from '../components/GoogleLoginButton.jsx';
+import { useAuth } from "../context/AuthContext";
+// import GoogleLoginButton from '../components/GoogleLoginButton.jsx';
+
+const loginSchema = z.object({
+  identifier: z.string().min(1, 'Email or username is required'),
+  password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional(),
+});
 
 function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
-  const { oauthLogin } = useAuth();
+  const { login, isAuthenticated, loading, error, setError } = useAuth();
   const [serverError, setServerError] = useState('');
 
   const {
@@ -21,7 +25,7 @@ function Login() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    defaultValues: { identifier: '', password: '', rememberMe: true },
+    defaultValues: { identifier: 'demo@example.com', password: 'password123', rememberMe: true },
   });
 
   useEffect(() => {
@@ -32,26 +36,34 @@ function Login() {
 
   const onSubmit = async (values) => {
     setServerError('');
-
+    setError(null);
     try {
-      await login({ identifier: values.identifier, password: values.password }, values.rememberMe);
+      await login(
+        { identifier: values.identifier, password: values.password },
+        values.rememberMe
+      );
       navigate('/dashboard');
-    } catch (error) {
-      setServerError(error?.response?.data?.message || 'Login failed. Please check your credentials.');
+    } catch (err) {
+      setServerError(err.message || 'Login failed. Please check your credentials.');
     }
   };
+
+  if (isAuthenticated) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <AuthLayout
       title="Welcome back"
-      description="Sign in to your account securely and continue managing your dashboard in a professional SaaS environment."
+      description="Sign in to your account securely and continue managing your dashboard."
       aside={
         <div className="space-y-2 rounded-3xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
           <p className="font-semibold text-slate-100">Login hints</p>
           <p>Use your email, username, or mobile number to sign in.</p>
-          <p>Social login buttons are placeholders for Google and GitHub integration.</p>
+          <p className="text-xs text-slate-400">Demo: Use any email and password</p>
         </div>
-      }>
+      }
+    >
       <div className="space-y-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-4">
@@ -88,29 +100,27 @@ function Login() {
             </Link>
           </div>
 
-          {serverError && <p className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{serverError}</p>}
+          {(serverError || error) && (
+            <p className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              {serverError || error}
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-3xl bg-cyan px-5 py-3 text-sm font-semibold text-navy transition hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60">
-            {isSubmitting ? 'Signing in...' : 'Login to your account'}
+            disabled={isSubmitting || loading}
+            className="w-full rounded-3xl bg-cyan px-5 py-3 text-sm font-semibold text-navy transition hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting || loading ? 'Signing in...' : 'Login to your account'}
           </button>
         </form>
 
         <div className="grid gap-3 sm:grid-cols-1">
-          <GoogleLoginButton
-            setLoading={() => {}}
-            setError={() => {}}
-            onSuccess={(data) => {
-              oauthLogin(data, true);
-              navigate('/dashboard');
-            }}
-          />
+          
         </div>
 
         <div className="rounded-3xl border border-slate-700/70 bg-slate-950/50 p-4 text-sm text-slate-300">
-          Don&apos;t have an account?{' '}
+          Don't have an account?{' '}
           <Link to="/register" className="font-semibold text-cyan hover:text-white">
             Create one now
           </Link>

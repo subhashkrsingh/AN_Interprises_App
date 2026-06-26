@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import UserMenu from './UserMenu.jsx';
 
 const publicLinks = [

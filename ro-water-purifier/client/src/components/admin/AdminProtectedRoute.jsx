@@ -1,23 +1,21 @@
-import { Box, CircularProgress } from '@mui/material';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useMeQuery } from '../../features/api/adminApi.js';
 
 export default function AdminProtectedRoute() {
   const token = useSelector((state) => state.auth.token);
-  const location = useLocation();
-  const { isLoading, isFetching } = useMeQuery(undefined, { skip: !token });
-
+  const user = useSelector((state) => state.auth.user);
+  
   if (!token) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
-  if (isLoading || isFetching) {
-    return (
-      <Box sx={{ display: 'grid', minHeight: '100vh', placeItems: 'center' }}>
-        <CircularProgress />
-      </Box>
-    );
+  // Check if user has admin role
+  const isAdmin = user?.roles?.some(role => 
+    ['super_admin', 'admin', 'manager'].includes(role.slug || role)
+  ) || user?.isAdmin;
+
+  if (!isAdmin) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <Outlet />;

@@ -1,50 +1,33 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const token = localStorage.getItem('admin_access_token') || sessionStorage.getItem('admin_access_token');
-const userRaw = localStorage.getItem('admin_user') || sessionStorage.getItem('admin_user');
-
 const initialState = {
-  token,
-  user: userRaw ? JSON.parse(userRaw) : null,
+  token: localStorage.getItem('admin_token') || null,
+  user: JSON.parse(localStorage.getItem('admin_user')) || null,
+  isAuthenticated: !!localStorage.getItem('admin_token'),
 };
 
-function persistAuth(state, remember = true) {
-  const storage = remember ? localStorage : sessionStorage;
-  const other = remember ? sessionStorage : localStorage;
-
-  if (state.token) storage.setItem('admin_access_token', state.token);
-  if (state.user) storage.setItem('admin_user', JSON.stringify(state.user));
-  other.removeItem('admin_access_token');
-  other.removeItem('admin_user');
-}
-
-function clearAuthStorage() {
-  localStorage.removeItem('admin_access_token');
-  localStorage.removeItem('admin_user');
-  sessionStorage.removeItem('admin_access_token');
-  sessionStorage.removeItem('admin_user');
-}
-
 const authSlice = createSlice({
-  name: 'adminAuth',
+  name: 'auth',
   initialState,
   reducers: {
-    setCredentials(state, action) {
-      state.token = action.payload.accessToken;
-      state.user = action.payload.user;
-      persistAuth(state, action.payload.remember !== false);
+    setCredentials: (state, action) => {
+      const { token, user } = action.payload;
+      state.token = token;
+      state.user = user;
+      state.isAuthenticated = true;
+      localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_user', JSON.stringify(user));
     },
-    setUser(state, action) {
-      state.user = action.payload;
-      persistAuth(state, true);
-    },
-    clearCredentials(state) {
+    logout: (state) => {
       state.token = null;
       state.user = null;
-      clearAuthStorage();
+      state.isAuthenticated = false;
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      sessionStorage.removeItem('auth_last_login');
     },
   },
 });
 
-export const { setCredentials, setUser, clearCredentials } = authSlice.actions;
+export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;

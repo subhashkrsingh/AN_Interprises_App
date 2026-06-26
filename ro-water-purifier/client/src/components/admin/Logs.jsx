@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAuditLogs } from '../services/auditService.js';
+import { getAuditLogs } from '../../../services/auditService.js';
 
 function AdminLogs() {
   const [logs, setLogs] = useState([]);

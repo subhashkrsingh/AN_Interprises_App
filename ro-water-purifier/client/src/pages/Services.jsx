@@ -3,7 +3,32 @@ import { motion } from 'framer-motion';
 import { getServices } from '../api/index.js';
 import Loader from '../components/Loader.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
-import useDocumentTitle from '../hooks/useDocumentTitle.js';
+import useDocumentTitle from '../hooks/useDocumentTitle.jsx';
+import {
+  lifeguardRo,
+  lifeguardBooster,
+  lifeguardMax,
+  lifeguardPurix1,
+  serviceInstall,
+  serviceRepair,
+  serviceMaintenance,
+} from '../assets/images/index.js';
+
+const serviceImages = {
+  'RO Water Purifier Sales': lifeguardRo,
+  'RO Installation Service': serviceInstall,
+  'RO Repair & Maintenance': serviceRepair,
+  'Filter & Membrane Replacement': serviceMaintenance,
+  'AMC Plans': serviceMaintenance,
+};
+
+const serviceIcons = {
+  'RO Water Purifier Sales': '🛒',
+  'RO Installation Service': '🔧',
+  'RO Repair & Maintenance': '🛠️',
+  'Filter & Membrane Replacement': '🔄',
+  'AMC Plans': '📋',
+};
 
 function Services() {
   useDocumentTitle('Services | Best RO Water Purifier Sales & Service Provider');
@@ -53,10 +78,20 @@ Quantity: 1`;
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="section-card"
+                className="section-card overflow-hidden hover:border-cyan/50 transition-colors"
               >
-                <div className="text-4xl">{service.icon}</div>
-                <h2 className="mt-5 text-2xl font-semibold text-white">{service.title}</h2>
+                <div className="overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950/60 h-56 flex items-center justify-center">
+                  <img
+                    src={service.image || serviceImages[service.title] || lifeguardRo}
+                    alt={service.title}
+                    className="w-full h-full object-cover transition duration-500 hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="text-3xl">{serviceIcons[service.title] || service.icon || '🔹'}</span>
+                  <h2 className="text-2xl font-semibold text-white">{service.title}</h2>
+                </div>
                 <p className="mt-3 text-slate-300">{service.description}</p>
                 <p className="mt-4 text-slate-200">
                   <span className="font-semibold text-white">Price:</span> {service.price ?? 'Contact for price'}

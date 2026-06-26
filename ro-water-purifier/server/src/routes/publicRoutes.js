@@ -7,9 +7,54 @@ const router = express.Router();
 const contactsFile = path.resolve(__dirname, '../../contacts.json');
 
 const services = [
-  { id: 1, title: 'RO Water Purifier Sales', description: 'Premium RO systems for homes and businesses.', price: 'Rs. 10,999' },
-  { id: 2, title: 'RO Installation Service', description: 'Safe installation from certified technicians.', price: 'Rs. 2,499' },
-  { id: 3, title: 'RO Repair & Maintenance', description: 'Diagnostics, repair and AMC support.', price: 'Rs. 1,999' },
+  {
+    id: 1,
+    title: 'RO Water Purifier Sales',
+    description: 'Premium RO systems for homes and businesses.',
+    price: 'Rs. 10,999',
+    image: '/images/services/ro-sales.svg',
+    icon: '🚰',
+  },
+  {
+    id: 2,
+    title: 'RO Installation Service',
+    description: 'Safe installation from certified technicians.',
+    price: 'Rs. 2,499',
+    image: '/images/services/ro-installation.svg',
+    icon: '🔧',
+  },
+  {
+    id: 3,
+    title: 'RO Repair & Maintenance',
+    description: 'Diagnostics, repair and AMC support.',
+    price: 'Rs. 1,999',
+    image: '/images/services/ro-repair.svg',
+    icon: '🛠️',
+  },
+  {
+    id: 4,
+    title: 'Filter & Membrane Replacement',
+    description: 'Genuine spare parts with doorstep replacement.',
+    price: 'Rs. 1,499',
+    image: '/images/services/ro-filter.svg',
+    icon: '🧪',
+  },
+  {
+    id: 5,
+    title: 'AMC Plans',
+    description: 'Annual maintenance contracts for worry-free service.',
+    price: 'Rs. 4,999 / yr',
+    image: '/images/services/ro-amc.svg',
+    icon: '📅',
+  },
+  {
+    id: 6,
+    title: 'Water TDS Testing',
+    description: 'On-site water quality testing and consultation.',
+    price: 'Free',
+    image: '/images/services/ro-tds.svg',
+    icon: '💧',
+  },
 ];
 
 const products = [

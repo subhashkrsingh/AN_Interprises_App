@@ -2,23 +2,50 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { registerSchema, calculatePasswordStrength } from '../utils/validators.js';
+import { z } from 'zod';
 import AuthLayout from '../components/AuthLayout.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
-import { useAuth } from '../hooks/useAuth.js';
-import GoogleLoginButton from '../components/GoogleLoginButton.jsx';
+import { useAuth } from "../context/AuthContext";
+// import GoogleLoginButton from '../components/GoogleLoginButton.jsx';
+
+// Password strength calculator
+const calculatePasswordStrength = (password) => {
+  if (!password) return { value: 0, label: 'None', color: 'bg-slate-600' };
+  let score = 0;
+  if (password.length >= 8) score += 25;
+  if (password.length >= 12) score += 15;
+  if (/[a-z]/.test(password)) score += 20;
+  if (/[A-Z]/.test(password)) score += 20;
+  if (/[0-9]/.test(password)) score += 10;
+  if (/[^a-zA-Z0-9]/.test(password)) score += 10;
+  if (score > 100) score = 100;
+  
+  let label = 'Weak';
+  let color = 'bg-rose-500';
+  if (score >= 80) { label = 'Strong'; color = 'bg-emerald-500'; }
+  else if (score >= 60) { label = 'Good'; color = 'bg-amber-500'; }
+  else if (score >= 40) { label = 'Fair'; color = 'bg-cyan-500'; }
+  
+  return { value: score, label, color };
+};
+
+const registerSchema = z.object({
+  fullName: z.string().min(2, 'Full name is required'),
+  email: z.string().email('Please enter a valid email'),
+  mobile: z.string().optional(),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
+  terms: z.boolean().refine(val => val === true, 'You must accept the terms'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
 
 function Register() {
   const navigate = useNavigate();
-  const { register: authRegister, isAuthenticated } = useAuth();
-  const { oauthLogin } = useAuth();
+  const { register: authRegister, isAuthenticated, loading, error, setError } = useAuth();
   const [serverError, setServerError] = useState('');
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
 
   const {
     register,
@@ -27,26 +54,41 @@ function Register() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: '', email: '', mobile: '', username: '', password: '', confirmPassword: '', terms: false },
+    defaultValues: {
+      fullName: '',
+      email: '',
+      mobile: '',
+      username: '',
+      password: '',
+      confirmPassword: '',
+      terms: false,
+    },
   });
 
   const passwordValue = watch('password');
   const strength = useMemo(() => calculatePasswordStrength(passwordValue || ''), [passwordValue]);
 
-  if (isAuthenticated) {
-    navigate('/dashboard');
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const onSubmit = async (values) => {
     setServerError('');
-
+    setError(null);
     try {
       await authRegister(values);
       navigate('/dashboard');
-    } catch (error) {
-      setServerError(error?.response?.data?.message || 'Unable to create account. Please try again.');
+    } catch (err) {
+      setServerError(err.message || 'Unable to create account. Please try again.');
     }
   };
+
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return null;
+  }
 
   return (
     <AuthLayout
@@ -56,9 +98,10 @@ function Register() {
         <div className="space-y-3 rounded-3xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
           <p className="font-semibold text-slate-100">Account setup</p>
           <p>Choose a strong password and accept terms to keep your profile secure.</p>
-          <p>Staff and admin account roles are assigned by backend authorization.</p>
+          <p className="text-xs text-slate-400">Demo: Use any valid data to register</p>
         </div>
-      }>
+      }
+    >
       <div className="space-y-6">
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -83,7 +126,7 @@ function Register() {
               <input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="abhijitpancholi722@gmail.com"
                 {...register('email')}
                 className="w-full rounded-3xl border border-slate-700/80 bg-slate-900/90 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan focus:ring-2 focus:ring-cyan/20"
               />
@@ -99,7 +142,7 @@ function Register() {
               <input
                 id="mobile"
                 type="tel"
-                placeholder="9876543210"
+                placeholder="7987089890"
                 {...register('mobile')}
                 className="w-full rounded-3xl border border-slate-700/80 bg-slate-900/90 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan focus:ring-2 focus:ring-cyan/20"
               />
@@ -155,25 +198,29 @@ function Register() {
           </label>
           {errors.terms && <p className="text-sm text-rose-400">{errors.terms.message}</p>}
 
-          {serverError && <p className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{serverError}</p>}
+          {(serverError || error) && (
+            <p className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              {serverError || error}
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-3xl bg-cyan px-5 py-3 text-sm font-semibold text-navy transition hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60">
-            {isSubmitting ? 'Creating account...' : 'Register and continue'}
+            disabled={isSubmitting || loading}
+            className="w-full rounded-3xl bg-cyan px-5 py-3 text-sm font-semibold text-navy transition hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting || loading ? 'Creating account...' : 'Register and continue'}
           </button>
         </form>
 
         <div className="grid gap-3 sm:grid-cols-1">
-          <GoogleLoginButton
+          {/* <GoogleLoginButton
             setLoading={() => {}}
             setError={() => {}}
             onSuccess={(data) => {
-              oauthLogin(data, true);
-              navigate('/dashboard');
+              // Handle Google login
             }}
-          />
+          /> */}
         </div>
 
         <div className="rounded-3xl border border-slate-700/70 bg-slate-950/50 p-4 text-sm text-slate-300">

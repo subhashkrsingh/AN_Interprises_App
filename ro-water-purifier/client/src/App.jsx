@@ -10,6 +10,7 @@ import Contact from './pages/Contact.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
+import OTPLoginPage from './pages/OTPLogin.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Settings from './pages/Settings.jsx';
@@ -20,13 +21,14 @@ import AdminRoutes from './routes/AdminRoutes.jsx';
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '919876543210';
   const supportMessage = 'Hello Support Team, I need assistance regarding my account/order.';
 
   return (
     <div className="relative min-h-screen bg-navy text-slate-100">
       {!isAdminRoute && <Navbar />}
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
         <Route path="/products" element={<Products />} />
@@ -35,7 +37,12 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/otp-login" element={<OTPLoginPage />} />
+        
+        {/* Admin Routes */}
         <Route path="/admin/*" element={<AdminRoutes />} />
+        
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -64,7 +71,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!isAdminRoute && <Footer />}
-      {!isAdminRoute && (
+      {!isAdminRoute && whatsappNumber && (
         <WhatsAppButton
           phoneNumber={whatsappNumber}
           message={supportMessage}
